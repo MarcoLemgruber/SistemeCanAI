@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle - FlowVision</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">FlowVision</a>
+            <div class="ms-auto">
+                <a class="btn btn-outline-light" href="dashboard.html" style="margin-right: 0;">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2 class="mb-4">Controle do Ambiente</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">Resumo</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item">Entradas: <span id="entradas">-</span></li>
+                            <li class="list-group-item">Saídas: <span id="saidas">-</span></li>
+                            <li class="list-group-item">Máximo de pessoas: <span id="max_pessoas">-</span></li>
+                            <li class="list-group-item">Alertas: <span id="alertas">-</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">Alertas Recentes</div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Objeto</th>
+                                    <th>Score</th>
+                                    <th>Data/Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alertTable">
+                                <tr><td colspan="3">Nenhum alerta registrado.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = "/login";
+        }
+        // Botão Dashboard já está presente no topo direito
+        async function loadControle() {
+            const res = await fetch('http://127.0.0.1:5000/api/controle', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                alert('Erro ao carregar dados do controle.');
+                return;
+            }
+            const data = await res.json();
+            document.getElementById('entradas').textContent = data.stats.entradas;
+            document.getElementById('saidas').textContent = data.stats.saidas;
+            document.getElementById('max_pessoas').textContent = data.stats.max_pessoas;
+            document.getElementById('alertas').textContent = data.stats.alertas;
+            const alertTable = document.getElementById('alertTable');
+            alertTable.innerHTML = '';
+            if (data.alerts.length === 0) {
+                alertTable.innerHTML = '<tr><td colspan="3">Nenhum alerta registrado.</td></tr>';
+            } else {
+                data.alerts.forEach(a => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${a[0]}</td><td>${a[1]}</td><td>${a[2]}</td>`;
+                    alertTable.appendChild(tr);
+                });
+            }
+        }
+        loadControle();
+    </script>
+</body>
+</html>
